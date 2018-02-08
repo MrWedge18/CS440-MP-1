@@ -1,5 +1,42 @@
 import numpy as np
-import Queue
+from collections import deque
+
+class Position:
+    def __init__(self, y, x, parent):
+        self.y = y
+        self.x = x
+        self.coord = (y, x)
+        self.parent = parent
+        
+    def up(self):
+        return Position(self.x-1, self.y, self)
+        
+    def down(self):
+        return Position(self.x+1, self.y, self)
+        
+    def left(self):
+        return Position(self.x, self.y-1, self)
+        
+    def right(self):
+        return Position(self.x, self.y+1, self)
+        
+    def equals(self, pos):
+        if self.x == pos.x and self.y == pos.y:
+            return true
+        else:
+            return false
+            
+    def up_coord(self):
+        return (self.coord[0]-1, self.coord[1])
+        
+    def down_coord(self):
+        return (self.coord[0]+1, self.coord[1])
+        
+    def left_coord(self):
+        return (self.coord[0], self.coord[1]-1)
+        
+    def right_coord(self):
+        return (self.coord[0], self.coord[1]+1)
 
 def medium_maze():
     file = open("mediumMaze.txt")
@@ -61,5 +98,49 @@ def medium_search():
     file.close()
     return maze
     
+def check(pos, food):
+    for i in range(len(food)):
+        if pos.coord == food[i]:
+            food.pop(i)
+            return
+
+def print_to_txt(maze):
+    bounds = maze.shape
+    file = open("debug.txt", "w")
+    for i in range(bounds[0]):
+        for j in range(bounds[1]):
+            file.write(maze[i][j])
+        file.write("\r\n")
+            
+# Maze is a 2D numpy array
+# Start is a 2-tuple
+# Food is a list of 2-tuple
 def bfs(maze, start, food):
+    frontier = deque()
     
+    pos = Position(start[0], start[1], None)
+    frontier.append(pos)
+    
+    count = 0
+    
+    while(len(food) > 0):
+        print('step ' + str(count))
+        count += 1
+        if count == 10000:
+            print_to_txt(maze)
+            break
+        pos = frontier.popleft()
+        check(pos, food)
+        
+        if maze[pos.y][pos.x] == ' ' or maze[pos.y][pos.x] == '.' or maze[pos.y][pos.x] == 'P' :
+            maze[pos.y][pos.x] == "'"
+            frontier.append(pos.up())
+            frontier.append(pos.down())
+            frontier.append(pos.left())
+            frontier.append(pos.right())
+                
+    return pos
+    
+maze = medium_maze()
+path = bfs(maze, (1,1), [(20,59)])
+
