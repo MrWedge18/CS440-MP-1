@@ -1,4 +1,5 @@
 import numpy as np
+import pdb
 from collections import deque
 
 class Position:
@@ -9,16 +10,16 @@ class Position:
         self.parent = parent
         
     def up(self):
-        return Position(self.x-1, self.y, self)
+        return Position(self.y-1, self.x, self)
         
     def down(self):
-        return Position(self.x+1, self.y, self)
+        return Position(self.y+1, self.x, self)
         
     def left(self):
-        return Position(self.x, self.y-1, self)
+        return Position(self.y, self.x-1, self)
         
     def right(self):
-        return Position(self.x, self.y+1, self)
+        return Position(self.y, self.x+1, self)
         
     def equals(self, pos):
         if self.x == pos.x and self.y == pos.y:
@@ -27,16 +28,16 @@ class Position:
             return false
             
     def up_coord(self):
-        return (self.coord[0]-1, self.coord[1])
+        return (self.y-1, self.x)
         
     def down_coord(self):
-        return (self.coord[0]+1, self.coord[1])
+        return (self.y, self.x)
         
     def left_coord(self):
-        return (self.coord[0], self.coord[1]-1)
+        return (self.y, self.x-1)
         
     def right_coord(self):
-        return (self.coord[0], self.coord[1]+1)
+        return (self.y, self.x+1)
 
 def medium_maze():
     file = open("mediumMaze.txt")
@@ -111,11 +112,19 @@ def print_to_txt(maze):
         for j in range(bounds[1]):
             file.write(maze[i][j])
         file.write("\r\n")
+        
+def is_valid(maze, pos):
+    if not maze[pos.y][pos.x] == '%' and not maze[pos.y][pos.x] == "'":
+        return True
+        
+    return False
             
 # Maze is a 2D numpy array
 # Start is a 2-tuple
 # Food is a list of 2-tuple
 def bfs(maze, start, food):
+    bounds = maze.shape
+
     frontier = deque()
     
     pos = Position(start[0], start[1], None)
@@ -124,21 +133,35 @@ def bfs(maze, start, food):
     count = 0
     
     while(len(food) > 0):
+        #pdb.set_trace()
         print('step ' + str(count))
         count += 1
         if count == 10000:
             print_to_txt(maze)
+            pdb.set_trace()
             break
         pos = frontier.popleft()
         check(pos, food)
         
-        if maze[pos.y][pos.x] == ' ' or maze[pos.y][pos.x] == '.' or maze[pos.y][pos.x] == 'P' :
-            maze[pos.y][pos.x] == "'"
-            frontier.append(pos.up())
-            frontier.append(pos.down())
-            frontier.append(pos.left())
-            frontier.append(pos.right())
-                
+        if pos.y >= bounds[0] or pos.x >= bounds[1]:
+            continue
+        
+        if is_valid(maze, pos):
+            maze[pos.y][pos.x] = "'"
+            up = pos.up()
+            down = pos.down()
+            left = pos.left()
+            right = pos.right()
+            if is_valid(maze, up):
+                frontier.append(up)
+            if is_valid(maze, down):
+                frontier.append(down)
+            if is_valid(maze, left):
+                frontier.append(left)
+            if is_valid(maze, right):
+                frontier.append(right)
+              
+    print_to_txt(maze)
     return pos
     
 maze = medium_maze()
