@@ -4,6 +4,13 @@ from collections import deque
 import math
 import heapq
 
+# Position object
+# y - y coordinate in the maze
+# x - x coordinate in the maze
+# (0,0) is the top left and y increases as you go down
+# parent is the parent node. None if this node is the root
+#
+# Position object will also internally store the path cost. get_cost() will return the cost.
 class Position:
     def __init__(self, y, x, parent):
         self.y = y
@@ -44,7 +51,11 @@ class Position:
         
     def right_coord(self):
         return (self.y, self.x+1)
+    
+    def get_cost(self):
+        return self.cost
 
+# Reads the medium maze and returns it as a numpy array
 def medium_maze():
     file = open("mediumMaze.txt")
     maze = np.empty([23,61], dtype=str)
@@ -54,7 +65,8 @@ def medium_maze():
         file.read(1)
     file.close()
     return maze
-    
+
+# Reads the big maze and returns it as a numpy array    
 def big_maze():
     file = open("bigMaze.txt")
     maze = np.empty([31, 81], dtype=str)
@@ -64,7 +76,8 @@ def big_maze():
         file.read(2)
     file.close()
     return maze
-    
+
+# Reads the open maze and returns it as a numpy array
 def open_maze():
     file = open("openMaze.txt")
     maze = np.empty([20, 37], dtype=str)
@@ -75,59 +88,33 @@ def open_maze():
     file.close()
     return maze
     
-def tiny_search():
-    file = open("tinySearch.txt")
-    maze = np.empty([9, 10], dtype=str)
-    for i in range(9):
-        for j in range(10):
-            maze[i][j] = file.read(1)
-        file.read(1)
-    file.close()
-    return maze
-    
-def small_search():
-    file = open("smallSearch.txt")
-    maze = np.empty([13, 30], dtype=str)
-    for i in range(13):
-        for j in range(30):
-            maze[i][j] = file.read(1)
-        file.read(1)
-    file.close()
-    return maze
-    
-def medium_search():
-    file = open("mediumSearch.txt")
-    maze = np.empty([13, 49], dtype=str)
-    for i in range(13):
-        for j in range(49):
-            maze[i][j] = file.read(1)
-        file.read(1)
-    file.close()
-    return maze
-    
+#Checks if pos is at a food space
 def check(pos, food):
     for i in range(len(food)):
         if pos.coord == food[i]:
             food.pop(i)
             return
 
+#prints the maze numpy array to a text file.
 def print_to_txt(maze):
     bounds = maze.shape
     file = open("debug.txt", "w")
     for i in range(bounds[0]):
         for j in range(bounds[1]):
             file.write(maze[i][j])
-        file.write("\r\n")
-        
+        file.write("\r\n")  #\r\n for windows notepad
+
+#Checks if the position is a valid position (i.e. not a wall or visited position)
 def is_valid(maze, pos):
     if not maze[pos.y][pos.x] == '%' and not maze[pos.y][pos.x] == "'":
         return True
         
     return False
             
-# Maze is a 2D numpy array
+# Breadth First search
 # Start is a 2-tuple
-# Food is a list of 2-tuple
+# Food is a list of 2-tuples
+# Visited is a boolean. bfs will track visited spaces if True
 def bfs(maze, start, food, visited):
     bounds = maze.shape
 
@@ -170,7 +157,8 @@ def bfs(maze, start, food, visited):
               
     print_to_txt(maze)
     return pos
-    
+
+# recursively goes through the path backwards and places '.' on the path
 def path (maze, pos, cost):
     if pos.parent is None:
         print_to_txt(maze)
@@ -180,6 +168,10 @@ def path (maze, pos, cost):
     maze[pos.y][pos.x] = '.'
     path(maze, pos.parent, cost + 1)
 
+# Depth First search
+# Start is a 2-tuple
+# Food is a list of 2-tuples
+# Visited is a boolean. bfs will track visited spaces if True
 def dfs (maze, start, food, visited):
     bounds = maze.shape
 
@@ -223,6 +215,10 @@ def dfs (maze, start, food, visited):
     print_to_txt(maze)
     return pos
 
+# Greedy search
+# Start is a 2-tuple
+# Food is a list of 2-tuples
+# Visited is a boolean. bfs will track visited spaces if True
 def greedy (maze, start, food, visited):
     bounds = maze.shape
 
@@ -267,7 +263,11 @@ def greedy (maze, start, food, visited):
               
     print_to_txt(maze)
     return pos
-    
+
+# A* search
+# Start is a 2-tuple
+# Food is a list of 2-tuples
+# Visited is a boolean. bfs will track visited spaces if True
 def ayy(maze, start, food, visited):
     bounds = maze.shape
 
@@ -312,7 +312,7 @@ def ayy(maze, start, food, visited):
     print_to_txt(maze)
     return pos
     
-
+# Searches maze for food. Returns a list of tuples of their locations
 def foods (maze):
     food = []
     dim = maze.shape
@@ -322,7 +322,8 @@ def foods (maze):
                 coord = (i, j)
                 food.append(coord)
     return food
-   
+ 
+# Searches maze fo 'P'. Returns a tuple of its position 
 def starts (maze):
     start = ()
     dim = maze.shape
@@ -333,17 +334,12 @@ def starts (maze):
                 break
     return start
 
+# Calculates Manhattan distance between food and position
 def md (pos, food):
     if(len(food) <= 0):
         return float("inf")
     return math.fabs(food[0][0] - pos.y) + math.fabs(food[0][1] - pos.x)
     
+# For A*. Calculates path cost + manhattan distance
 def eval(pos, food):
     return pos.cost + md(pos, food)
-
-maze = open_maze()
-food = foods(maze)
-start = starts(maze)
-pos = ayy(maze, start, food, True)
-maze = open_maze()
-path (maze, pos, 0)
