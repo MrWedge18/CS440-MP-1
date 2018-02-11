@@ -155,7 +155,6 @@ def bfs(maze, start, food, visited):
             if is_valid(maze, right):
                 frontier.append(right)
               
-    print_to_txt(maze)
     return pos
 
 # recursively goes through the path backwards and places '.' on the path
